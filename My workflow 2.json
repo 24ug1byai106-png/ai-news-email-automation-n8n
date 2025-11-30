@@ -1,0 +1,220 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -560,
+        -144
+      ],
+      "id": "8f01d7d5-605c-49ad-8d58-3b8d38a4036a",
+      "name": "When chat message received",
+      "webhookId": "e591a370-84eb-45a6-b6f4-8a6033b54d93"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize the following top 5 news items in a clean, well-formatted email style.\n\nFORMAT EXACTLY LIKE THIS:\n---\n📰 **Top 5 News Summary – {{ $json.date }}**\n\n1. **Headline 1**\n   - Short summary here.\n\n2. **Headline 2**\n   - Short summary here.\n\n3. **Headline 3**\n   - Short summary here.\n\n4. **Headline 4**\n   - Short summary here.\n\n5. **Headline 5**\n   - Short summary here.\n\n📌 Generated automatically by n8n\n---\n\nHere are the news items:\n{{ $json.newsText }}\n\n",
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        -144
+      ],
+      "id": "0467a834-5bad-480b-9741-e75b5cce8f2e",
+      "name": "AI Agent",
+      "executeOnce": false
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        48
+      ],
+      "id": "7a2ba840-6154-422f-86df-8caef3c7c409",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        -144
+      ],
+      "id": "6425ed49-b439-4d22-95c4-1efbdc2469d1",
+      "name": "Wait",
+      "webhookId": "dd76bcc9-9654-4ca7-80eb-6ee544dcaeda"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        128,
+        32
+      ],
+      "id": "04e52d3d-d4e5-4b32-ba36-40ccda1533cc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OfSi9kjTJojpRfy9",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en:en",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        -144
+      ],
+      "id": "95e54480-09b7-45c4-9769-5073c95c11ea",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "jsCode": "const articles = items.map((item, index) => {\n  return `${index + 1}. ${item.json.title}\\n   ${item.json.description}`;\n});\n\nreturn [{\n  json: {\n    newsText: articles.join(\"\\n\\n\"),\n    date: new Date().toLocaleDateString()\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -144
+      ],
+      "id": "4f3eb8d8-9bd7-485b-a798-9009c19b64ee",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "karanthvishnu1@gmail.com",
+        "subject": "Top 5 News Summary",
+        "message": "=\n<h2>📰 Top 5 News Summary \n\n<div style=\"font-size: 15px; line-height: 1.6;\">\n  {{ $json.output.replaceAll('\\n', '<br>') }}\n</div>\n\n<hr>\n<p style=\"color: #666;\">This email was generated automatically.</p>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        -144
+      ],
+      "id": "5aa57507-0b87-4c17-ab48-3e01b3c292c6",
+      "name": "Send a message",
+      "webhookId": "49fb3054-66ab-4027-819b-9fda073b24bf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ob5NDPbxrCx5ATAd",
+          "name": "Gmail account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a059c1c6-1afd-4a01-9898-0b309fd72848",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce976522896c8da92b1fdc460a0f32c37f2786c488933a8339704d2f36629c41"
+  },
+  "id": "KVCOjjWUbNbERreo",
+  "tags": []
+}
